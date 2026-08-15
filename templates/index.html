@@ -22,9 +22,19 @@
         <button type="submit">Search</button>
     </form>
 
-    {% if data %}
-    <h2>API Response</h2>
-    <p>{{ data }}</p>
+    {% if player %}
+    <h2>{{ player.name }}</h2>
+
+    <p>Nationality: {{ player.nationality }}</p>
+    <p>Age: {{ player.age }}</p>
+    <p>Position: {{ player.position }}</p>
+
+    <h3>Statistics</h3>
+
+    <p>Appearances: {{ player.appearances }}</p>
+    <p>Minutes: {{ player.minutes }}</p>
+    <p>Goals: {{ player.goals }}</p>
+    <p>Assists: {{ player.assists }}</p>
     {% endif %}
 
 </body>

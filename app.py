@@ -29,11 +29,28 @@ def get_player_data(player_name):
 @app.route("/", methods=["GET", "POST"])
 def home():
     if request.method == "POST":
-        player = request.form["player"]
+        player_name = request.form["player"]
 
-        data = get_player_data(player)
+        data = get_player_data(player_name)
 
-        return render_template("index.html", data=data)
+        player = data["response"][0]["player"]
+        statistics = data["response"][0]["statistics"][0]
+
+        games = statistics["games"]
+        goals = statistics["goals"]
+
+        player_data = {
+            "name": player["name"],
+            "age": player["age"],
+            "nationality": player["nationality"],
+            "position": games["position"],
+            "appearances": games["appearences"],
+            "minutes": games["minutes"],
+            "goals": goals["total"],
+            "assists": goals["assists"]
+        }
+
+        return render_template("index.html", player=player_data)
 
     return render_template("index.html")
 
