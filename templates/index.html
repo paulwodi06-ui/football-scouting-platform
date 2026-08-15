@@ -17,10 +17,15 @@
 
     <h2>Search for a player</h2>
 
-    <form>
-        <input type="text" placeholder="Enter player name">
+    <form method="POST" action="/">
+        <input type="text" name="player" placeholder="Enter player name">
         <button type="submit">Search</button>
     </form>
+
+    {% if data %}
+    <h2>API Response</h2>
+    <p>{{ data }}</p>
+    {% endif %}
 
 </body>
 
