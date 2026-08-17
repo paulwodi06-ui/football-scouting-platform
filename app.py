@@ -7,9 +7,26 @@ app = Flask(__name__)
 load_dotenv()
 
 api_key = os.getenv("API_KEY")
+SEASON = 2024
 
 
-def get_player_data(player_name):
+def search_player(player_name):
+    url = "https://v3.football.api-sports.io/players/profiles"
+
+    headers = {
+        "x-apisports-key": api_key
+    }
+
+    params = {
+        "search": player_name
+    }
+
+    response = requests.get(url, headers=headers, params=params)
+
+    return response.json()
+
+
+def get_player_stats(player_id):
     url = "https://v3.football.api-sports.io/players"
 
     headers = {
@@ -17,8 +34,8 @@ def get_player_data(player_name):
     }
 
     params = {
-        "team": 42,
-        "search": player_name
+        "id": player_id,
+        "season": SEASON
     }
 
     response = requests.get(url, headers=headers, params=params)
@@ -31,10 +48,20 @@ def home():
     if request.method == "POST":
         player_name = request.form["player"]
 
-        data = get_player_data(player_name)
+        search_data = search_player(player_name)
 
-        player = data["response"][0]["player"]
-        statistics = data["response"][0]["statistics"][0]
+        if search_data["results"] == 0:
+            return render_template("index.html", error="Player not found")
+
+        player_id = search_data["response"][0]["player"]["id"]
+
+        stats_data = get_player_stats(player_id)
+
+        if stats_data["results"] == 0:
+            return render_template("index.html", error="No statistics found")
+
+        player = stats_data["response"][0]["player"]
+        statistics = stats_data["response"][0]["statistics"][0]
 
         games = statistics["games"]
         goals = statistics["goals"]
