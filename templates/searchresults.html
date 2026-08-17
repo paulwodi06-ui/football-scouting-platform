@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Search Results</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <a href="/">← New Search</a>
+
+    <h1>Search Results</h1>
+
+    {% for player in players %}
+
+    <div>
+        <h2>
+            {{ player.firstname }}
+            {{ player.lastname }}
+        </h2>
+
+        <p>Age: {{ player.age }}</p>
+
+        <p>Nationality: {{ player.nationality }}</p>
+
+        <a href="/player/{{ player.id }}">
+            View Player
+        </a>
+    </div>
+
+    {% endfor %}
+
+</body>
+
+</html>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{{ player.name }} - Football Scouting Platform</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <a href="/">← Back to Search</a>
+
+    <h1>{{ player.name }}</h1>
+
+    <p>Nationality: {{ player.nationality }}</p>
+    <p>Age: {{ player.age }}</p>
+    <p>Position: {{ player.position }}</p>
+
+    <h2>2024/25 Statistics</h2>
+
+    <p>Appearances: {{ player.appearances }}</p>
+    <p>Minutes: {{ player.minutes }}</p>
+    <p>Goals: {{ player.goals }}</p>
+    <p>Assists: {{ player.assists }}</p>
+
+</body>
+
+</html>
