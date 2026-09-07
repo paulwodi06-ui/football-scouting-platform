@@ -1,13 +1,39 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect
 from dotenv import load_dotenv
 import os
 import requests
+import sqlite3
 
 app = Flask(__name__)
 load_dotenv()
 
 api_key = os.getenv("API_KEY")
 SEASON = 2024
+
+
+def get_db_connection():
+    conn = sqlite3.connect("players.db")
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def init_db():
+    conn = get_db_connection()
+
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS watchlist (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            player_id INTEGER UNIQUE,
+            name TEXT NOT NULL,
+            age INTEGER,
+            nationality TEXT,
+            position TEXT,
+            valuation_score REAL
+        )
+    """)
+
+    conn.commit()
+    conn.close()
 
 
 def age_score(age):
@@ -199,6 +225,7 @@ def build_player_data(stats_data):
     pass_accuracy = passes["accuracy"] or 0
 
     player_data = {
+        "player_id": player["id"],
         "name": player["name"],
         "age": player["age"],
         "nationality": player["nationality"],
@@ -298,8 +325,69 @@ def compare_players():
     return render_template("compare.html")
 
 
-if __name__ == "__main__":
-    app.run(debug=True)
+@app.route("/watchlist/add", methods=["POST"])
+def add_to_watchlist():
+    player_id = request.form["player_id"]
+    name = request.form["name"]
+    age = request.form["age"]
+    nationality = request.form["nationality"]
+    position = request.form["position"]
+    valuation_score = request.form["valuation_score"]
 
+    conn = get_db_connection()
+
+    conn.execute("""
+        INSERT OR IGNORE INTO watchlist
+        (player_id, name, age, nationality, position, valuation_score)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (
+        player_id,
+        name,
+        age,
+        nationality,
+        position,
+        valuation_score
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return "Player saved to watchlist"
+
+
+@app.route("/watchlist")
+def watchlist():
+    conn = get_db_connection()
+
+    players = conn.execute(
+        "SELECT * FROM watchlist"
+    ).fetchall()
+
+    conn.close()
+
+    return render_template(
+        "watchlist.html",
+        players=players
+    )
+
+
+@app.route("/watchlist/remove/<int:player_id>", methods=["POST"])
+def remove_from_watchlist(player_id):
+    conn = get_db_connection()
+
+    conn.execute(
+        "DELETE FROM watchlist WHERE player_id = ?",
+        (player_id,)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/watchlist")
+
+
+if __name__ == "__main__":
+    init_db()
+    app.run(debug=True)
 
 # Exercises

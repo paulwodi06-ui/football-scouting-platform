@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Watchlist</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <h1>Player Watchlist</h1>
+
+    {% if players %}
+
+    {% for player in players %}
+    <div class="player-card">
+        <h2>{{ player.name }}</h2>
+        <p>Age: {{ player.age }}</p>
+        <p>Nationality: {{ player.nationality }}</p>
+        <p>Position: {{ player.position }}</p>
+        <p>Valuation Score: {{ player.valuation_score }}</p>
+        <form method="POST" action="/watchlist/remove/{{ player.player_id }}">
+            <button type="submit">Remove from Watchlist</button>
+        </form>
+    </div>
+    {% endfor %}
+
+    {% else %}
+
+    <p>No players saved yet.</p>
+
+    {% endif %}
+
+</body>
+
+</html>
