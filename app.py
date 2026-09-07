@@ -158,6 +158,68 @@ def get_player_stats(player_id):
     return response.json()
 
 
+def build_player_data(stats_data):
+    if stats_data["results"] == 0:
+        return None
+
+    all_statistics = stats_data["response"][0]["statistics"]
+
+    best_stat = None
+    highest_minutes = 0
+
+    for stat in all_statistics:
+        minutes = stat["games"]["minutes"]
+
+        if minutes is not None and minutes > highest_minutes:
+            best_stat = stat
+            highest_minutes = minutes
+
+    if best_stat is None:
+        return None
+
+    player = stats_data["response"][0]["player"]
+    statistics = best_stat
+
+    games = statistics["games"]
+    goals = statistics["goals"]
+    tackles = statistics["tackles"]
+    duels = statistics["duels"]
+    passes = statistics["passes"]
+
+    goal_total = goals["total"] or 0
+    assist_total = goals["assists"] or 0
+    minutes_played = games["minutes"] or 0
+
+    tackles_total = tackles["total"] or 0
+    interceptions_total = tackles["interceptions"] or 0
+    duels_won = duels["won"] or 0
+
+    passes_total = passes["total"] or 0
+    key_passes = passes["key"] or 0
+    pass_accuracy = passes["accuracy"] or 0
+
+    player_data = {
+        "name": player["name"],
+        "age": player["age"],
+        "nationality": player["nationality"],
+        "position": games["position"],
+        "appearances": games["appearences"],
+        "minutes": minutes_played,
+        "goals": goal_total,
+        "assists": assist_total,
+        "tackles": tackles_total,
+        "interceptions": interceptions_total,
+        "duels_won": duels_won,
+        "passes": passes_total,
+        "key_passes": key_passes,
+        "pass_accuracy": pass_accuracy,
+        "valuation_score": calculate_valuation_score(player["age"], goal_total, assist_total, minutes_played, games["position"], tackles_total, interceptions_total,
+                                                     duels_won, passes_total, key_passes, pass_accuracy)
+    }
+
+    return player_data
+
+
 @app.route("/", methods=["GET", "POST"])
 def home():
     if request.method == "POST":
@@ -190,67 +252,50 @@ def home():
 def player_profile(player_id):
     stats_data = get_player_stats(player_id)
 
-    if stats_data["results"] == 0:
+    player_data = build_player_data(stats_data)
+
+    if player_data is None:
         return render_template(
             "index.html",
             error="No statistics found"
         )
 
-    all_statistics = stats_data["response"][0]["statistics"]
-    best_stat = None
-    highest_minutes = 0
-
-    for stat in all_statistics:
-        minutes = stat["games"]["minutes"]
-
-        if minutes is not None and minutes > highest_minutes:
-            best_stat = stat
-            highest_minutes = minutes
-
-    player = stats_data["response"][0]["player"]
-    statistics = best_stat
-
-    games = statistics["games"]
-    goals = statistics["goals"]
-    tackles = statistics["tackles"]
-    duels = statistics["duels"]
-    passes = statistics["passes"]
-
-    tackles_total = tackles["total"] or 0
-    interceptions_total = tackles["interceptions"] or 0
-    duels_won = duels["won"] or 0
-    minutes_played = games["minutes"] or 0
-
-    defensive_score(
-        tackles_total,
-        interceptions_total,
-        duels_won,
-        minutes_played)
-
-    passes_total = passes["total"] or 0
-    key_passes = passes["key"] or 0
-    pass_accuracy = passes["accuracy"] or 0
-
-    goal_total = goals["total"] or 0
-    assist_total = goals["assists"] or 0
-
-    player_data = {
-        "name": player["name"],
-        "age": player["age"],
-        "nationality": player["nationality"],
-        "position": games["position"],
-        "appearances": games["appearences"],
-        "minutes": minutes_played,
-        "goals": goal_total,
-        "assists": assist_total,
-        "valuation_score": calculate_valuation_score(player["age"], goal_total, assist_total, minutes_played, games["position"], tackles_total,
-                                                     interceptions_total, duels_won, passes_total, key_passes, pass_accuracy)
-    }
-
     return render_template(
         "player.html",
         player=player_data
     )
+
+
+@app.route("/compare", methods=["GET", "POST"])
+def compare_players():
+    if request.method == "POST":
+        player1_name = request.form["player1"]
+        player2_name = request.form["player2"]
+
+        player1_search = search_player(player1_name)
+        player2_search = search_player(player2_name)
+
+        if player1_search["results"] == 0 or player2_search["results"] == 0:
+            return render_template(
+                "compare.html",
+                error="One or both players could not be found"
+            )
+
+        player1_id = player1_search["response"][0]["player"]["id"]
+        player2_id = player2_search["response"][0]["player"]["id"]
+
+        player1_stats = get_player_stats(player1_id)
+        player2_stats = get_player_stats(player2_id)
+
+        player1_data = build_player_data(player1_stats)
+        player2_data = build_player_data(player2_stats)
+
+        if player1_data is None or player2_data is None:
+            return render_template("compare.html", error="Statistics could not be found for one or both players")
+
+        return render_template("compare.html", player1=player1_data, player2=player2_data)
+
+    return render_template("compare.html")
 
 
 if __name__ == "__main__":
