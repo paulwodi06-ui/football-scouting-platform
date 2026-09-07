@@ -4,14 +4,25 @@
 <head>
     <meta charset="UTF-8">
     <title>Compare Players</title>
+
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
 
+    <nav>
+        <a href="/">Search</a>
+        <a href="/compare">Compare</a>
+        <a href="/watchlist">Watchlist</a>
+    </nav>
+
     <form method="POST">
         <input type="text" name="player1" placeholder="First player" required>
+
         <input type="text" name="player2" placeholder="Second player" required>
+
         <button type="submit">Compare</button>
     </form>
 
@@ -19,74 +30,142 @@
 
     <div class="comparison-container">
 
+        <!-- PLAYER 1 -->
         <div class="player-card">
+
             <h2>{{ player1.name }}</h2>
+
             <p>Age: {{ player1.age }}</p>
             <p>Position: {{ player1.position }}</p>
             <p>Nationality: {{ player1.nationality }}</p>
             <p>Appearances: {{ player1.appearances }}</p>
             <p>Minutes: {{ player1.minutes }}</p>
-            <p> Valuation Score:
+
+            <p>
+                Valuation Score:
+
                 {% if player1.valuation_score > player2.valuation_score %}
-                <strong>{{ player1.valuation_score }} - Higher</strong>
+                <strong>
+                    {{ player1.valuation_score }} - Higher
+                </strong>
                 {% else %}
                 {{ player1.valuation_score }}
                 {% endif %}
             </p>
-            <p>
-                Valuation Score:
-                {% if player2.valuation_score > player1.valuation_score %}
-                <strong>{{ player2.valuation_score }} - Higher</strong>
-                {% else %}
-                {{ player2.valuation_score }}
-                {% endif %}
-            </p>
+
             {% if player1.position == "Defender" %}
+
             <p>Tackles: {{ player1.tackles }}</p>
             <p>Interceptions: {{ player1.interceptions }}</p>
             <p>Duels Won: {{ player1.duels_won }}</p>
 
             {% elif player1.position == "Midfielder" %}
+
             <p>Passes: {{ player1.passes }}</p>
             <p>Key Passes: {{ player1.key_passes }}</p>
             <p>Pass Accuracy: {{ player1.pass_accuracy }}%</p>
             <p>Duels Won: {{ player1.duels_won }}</p>
 
             {% elif player1.position == "Attacker" %}
+
             <p>Goals: {{ player1.goals }}</p>
             <p>Assists: {{ player1.assists }}</p>
+
             {% endif %}
+
         </div>
 
+
+        <!-- PLAYER 2 -->
         <div class="player-card">
+
             <h2>{{ player2.name }}</h2>
+
             <p>Age: {{ player2.age }}</p>
             <p>Position: {{ player2.position }}</p>
             <p>Nationality: {{ player2.nationality }}</p>
             <p>Appearances: {{ player2.appearances }}</p>
             <p>Minutes: {{ player2.minutes }}</p>
-            <p>Valuation Score: {{ player2.valuation_score }}</p>
+
+            <p>
+                Valuation Score:
+
+                {% if player2.valuation_score > player1.valuation_score %}
+                <strong>
+                    {{ player2.valuation_score }} - Higher
+                </strong>
+                {% else %}
+                {{ player2.valuation_score }}
+                {% endif %}
+            </p>
 
             {% if player2.position == "Defender" %}
+
             <p>Tackles: {{ player2.tackles }}</p>
             <p>Interceptions: {{ player2.interceptions }}</p>
             <p>Duels Won: {{ player2.duels_won }}</p>
 
             {% elif player2.position == "Midfielder" %}
+
             <p>Passes: {{ player2.passes }}</p>
             <p>Key Passes: {{ player2.key_passes }}</p>
             <p>Pass Accuracy: {{ player2.pass_accuracy }}%</p>
             <p>Duels Won: {{ player2.duels_won }}</p>
 
             {% elif player2.position == "Attacker" %}
+
             <p>Goals: {{ player2.goals }}</p>
             <p>Assists: {{ player2.assists }}</p>
+
             {% endif %}
+
         </div>
 
     </div>
 
+
+    <!-- CHART -->
+    <h2>Valuation Comparison</h2>
+
+    <div class="chart-container">
+        <canvas id="valuationChart"></canvas>
+    </div>
+
+    <script>
+        const ctx = document.getElementById("valuationChart");
+
+        new Chart(ctx, {
+            type: "bar",
+
+            data: {
+                labels: [
+                    {{ player1.name | tojson }},
+                    {{ player2.name | tojson }}
+                ],
+
+            datasets: [{
+                label: "Valuation Score",
+
+                data: [
+                    {{ player1.valuation_score }},
+            {{ player2.valuation_score }}
+        ]
+                }]
+            },
+
+            options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+        });
+    </script>
+
     {% endif %}
+
 
     {% if error %}
     <p>{{ error }}</p>
