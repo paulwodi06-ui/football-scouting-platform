@@ -49,23 +49,6 @@ def age_score(age):
         return 45
 
 
-def contribution_score(goals, assists, minutes):
-    goal_contributions = goals + assists
-    if minutes == 0:
-        return 0
-    contributions_per_90 = goal_contributions / minutes * 90
-    if contributions_per_90 >= 0.8:
-        return 100
-    elif contributions_per_90 >= 0.6:
-        return 85
-    elif contributions_per_90 >= 0.4:
-        return 70
-    elif contributions_per_90 >= 0.2:
-        return 50
-    else:
-        return 30
-
-
 def calculate_valuation_score(age, goals, assists, minutes, position, tackles, interceptions, duels_won, passes_total, key_passes, pass_accuracy):
     if position == "Defender":
         performance_score = defensive_score(
@@ -77,6 +60,9 @@ def calculate_valuation_score(age, goals, assists, minutes, position, tackles, i
 
     elif position == "Attacker":
         performance_score = attacking_score(goals, assists, minutes)
+
+    else:
+        performance_score = 50
 
     score = age_score(age) * 0.4 + performance_score * 0.6
 
@@ -295,7 +281,36 @@ def player_profile(player_id):
 
 @app.route("/compare", methods=["GET", "POST"])
 def compare_players():
+
     if request.method == "POST":
+
+        # STAGE 2:
+        # User has selected the exact players
+        if "player1_id" in request.form and "player2_id" in request.form:
+
+            player1_id = int(request.form["player1_id"])
+            player2_id = int(request.form["player2_id"])
+
+            player1_stats = get_player_stats(player1_id)
+            player2_stats = get_player_stats(player2_id)
+
+            player1_data = build_player_data(player1_stats)
+            player2_data = build_player_data(player2_stats)
+
+            if player1_data is None or player2_data is None:
+                return render_template(
+                    "compare.html",
+                    error="Statistics could not be found for one or both players"
+                )
+
+            return render_template(
+                "compare.html",
+                player1=player1_data,
+                player2=player2_data
+            )
+
+        # STAGE 1:
+        # User searches for two names
         player1_name = request.form["player1"]
         player2_name = request.form["player2"]
 
@@ -308,19 +323,34 @@ def compare_players():
                 error="One or both players could not be found"
             )
 
-        player1_id = player1_search["response"][0]["player"]["id"]
-        player2_id = player2_search["response"][0]["player"]["id"]
+        player1_options = []
+        player2_options = []
 
-        player1_stats = get_player_stats(player1_id)
-        player2_stats = get_player_stats(player2_id)
+        for result in player1_search["response"]:
+            player = result["player"]
 
-        player1_data = build_player_data(player1_stats)
-        player2_data = build_player_data(player2_stats)
+            player1_options.append({
+                "id": player["id"],
+                "name": player["name"],
+                "age": player["age"],
+                "nationality": player["nationality"]
+            })
 
-        if player1_data is None or player2_data is None:
-            return render_template("compare.html", error="Statistics could not be found for one or both players")
+        for result in player2_search["response"]:
+            player = result["player"]
 
-        return render_template("compare.html", player1=player1_data, player2=player2_data)
+            player2_options.append({
+                "id": player["id"],
+                "name": player["name"],
+                "age": player["age"],
+                "nationality": player["nationality"]
+            })
+
+        return render_template(
+            "compare.html",
+            player1_options=player1_options,
+            player2_options=player2_options
+        )
 
     return render_template("compare.html")
 

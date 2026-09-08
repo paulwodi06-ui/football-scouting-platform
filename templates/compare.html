@@ -26,6 +26,43 @@
         <button type="submit">Compare</button>
     </form>
 
+    {% if player1_options and player2_options %}
+
+    <h2>Select Players</h2>
+
+    <form method="POST">
+
+        <label>First Player:</label>
+
+        <select name="player1_id" required>
+            {% for player in player1_options %}
+            <option value="{{ player.id }}">
+                {{ player.name }}
+                - Age {{ player.age }}
+                - {{ player.nationality }}
+            </option>
+            {% endfor %}
+        </select>
+
+
+        <label>Second Player:</label>
+
+        <select name="player2_id" required>
+            {% for player in player2_options %}
+            <option value="{{ player.id }}">
+                {{ player.name }}
+                - Age {{ player.age }}
+                - {{ player.nationality }}
+            </option>
+            {% endfor %}
+        </select>
+
+        <button type="submit">Compare Selected Players</button>
+
+    </form>
+
+    {% endif %}
+
     {% if player1 and player2 %}
 
     <div class="comparison-container">
