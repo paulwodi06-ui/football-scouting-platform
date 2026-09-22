@@ -16,7 +16,11 @@
     </nav>
 
     <h1>Player Watchlist</h1>
-
+    <p>
+        Your saved players and their rule-based scouting scores.
+        These scores reflect age and season performance, not
+        estimated transfer-market values.
+    </p>
     {% if players %}
 
     {% for player in players %}
@@ -25,7 +29,7 @@
         <p>Age: {{ player.age }}</p>
         <p>Nationality: {{ player.nationality }}</p>
         <p>Position: {{ player.position }}</p>
-        <p>Valuation Score: {{ player.valuation_score }}</p>
+        <p>Scouting Score: {{ player.valuation_score }} / 100</p>
         <form method="POST" action="/watchlist/remove/{{ player.player_id }}">
             <button type="submit">Remove from Watchlist</button>
         </form>

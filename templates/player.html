@@ -33,8 +33,14 @@
     <p>Goals: {{ player.goals }}</p>
     <p>Assists: {{ player.assists }}</p>
 
-    <h2>Valuation Score</h2>
+    <h2>Scouting Score</h2>
     <p>{{ player.valuation_score }} / 100</p>
+
+    <p>
+        This rule-based score combines a player's age and
+        position-specific season statistics. It is not
+        an estimate of their transfer-market value.
+    </p>
 
     <form method="POST" action="/watchlist/add">
         <input type="hidden" name="player_id" value="{{ player.player_id }}">

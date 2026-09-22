@@ -79,7 +79,7 @@
             <p>Minutes: {{ player1.minutes }}</p>
 
             <p>
-                Valuation Score:
+                Scouting Score :
 
                 {% if player1.valuation_score > player2.valuation_score %}
                 <strong>
@@ -125,7 +125,7 @@
             <p>Minutes: {{ player2.minutes }}</p>
 
             <p>
-                Valuation Score:
+                Scouting Score :
 
                 {% if player2.valuation_score > player1.valuation_score %}
                 <strong>
@@ -162,7 +162,13 @@
 
 
     <!-- CHART -->
-    <h2>Valuation Comparison</h2>
+    <h2>Scouting Score Comparison</h2>
+
+    <p>
+        Compare players using their age and position-specific
+        performance statistics. A higher scouting score does
+        not necessarily indicate a higher transfer-market value.
+    </p>
 
     <div class="chart-container">
         <canvas id="valuationChart"></canvas>
@@ -181,7 +187,7 @@
                 ],
 
             datasets: [{
-                label: "Valuation Score",
+                label: "Scouting Score ",
 
                 data: [
                     {{ player1.valuation_score }},
