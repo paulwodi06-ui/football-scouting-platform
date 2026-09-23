@@ -161,6 +161,29 @@ When searches return multiple matching players, users can select the correct pla
 
 These features required additional backend logic rather than assuming that every API response would contain complete, directly usable data.
 
+## API Error Handling
+
+The application uses a reusable API request function to manage communication with API-Football.
+
+It handles connection failures, request timeouts, unsuccessful HTTP responses, API rate limits, invalid JSON and errors returned within API responses.
+
+A custom `FootballAPIError` exception and Flask error handler allow the application to display user-friendly error messages rather than exposing technical error pages.
+
+## Automated Testing
+
+The project includes 10 automated tests written using pytest.
+
+These cover age-score boundaries, zero-minute edge cases, position-specific scoring thresholds, weighted calculations and the fallback for unsupported positions.
+
+Run the tests locally using:
+
+```bash
+python -m pip install -r requirements-dev.txt
+python -m pytest -v
+```
+
+The scoring tests passed locally. API failures have also been tested manually using the custom error handler.
+
 ## Player Comparison
 
 Users can search for two players, select the correct profiles and compare their statistics.
@@ -309,8 +332,6 @@ The local `.env` file, virtual environment and generated SQLite database are exc
 
 ## Future Improvements
 
-- [ ] Add automated tests using pytest
-- [ ] Improve API error handling, including request timeouts and rate limits
 - [ ] Refactor the Flask backend into smaller modules
 - [ ] Add support for combining statistics across multiple competitions
 - [ ] Extend player analysis across multiple seasons

@@ -11,6 +11,102 @@ api_key = os.getenv("API_KEY")
 SEASON = 2024
 
 
+class FootballAPIError(Exception):
+    pass
+
+
+def football_api_request(endpoint, params):
+    if not api_key:
+        raise FootballAPIError(
+            "Football API key is not configured."
+        )
+
+    url = f"https://v3.football.api-sports.io/{endpoint}"
+
+    headers = {
+        "x-apisports-key": api_key
+    }
+
+    try:
+        response = requests.get(
+            url,
+            headers=headers,
+            params=params,
+            timeout=10
+        )
+
+        response.raise_for_status()
+
+    except requests.exceptions.Timeout as exc:
+        raise FootballAPIError(
+            "The football data request timed out. Please try again."
+        ) from exc
+
+    except requests.exceptions.ConnectionError as exc:
+        raise FootballAPIError(
+            "Could not connect to the football data service."
+        ) from exc
+
+    except requests.exceptions.HTTPError as exc:
+        status = (
+            exc.response.status_code
+            if exc.response is not None
+            else None
+        )
+
+        if status == 429:
+            message = "API request limit reached. Please try again later."
+        elif status in (401, 403):
+            message = "Football API authentication or access failed."
+        else:
+            message = "The football data service returned an error."
+
+        raise FootballAPIError(message) from exc
+
+    except requests.exceptions.RequestException as exc:
+        raise FootballAPIError(
+            "An unexpected network error occurred."
+        ) from exc
+
+    try:
+        data = response.json()
+    except ValueError as exc:
+        raise FootballAPIError(
+            "The football data service returned an invalid response."
+        ) from exc
+
+    if not isinstance(data, dict):
+        raise FootballAPIError("Unexpected football API response.")
+
+    if data.get("errors"):
+        raise FootballAPIError(
+            "The football API rejected the request. "
+            "Please check your API plan or try again later."
+        )
+
+    if (
+        not isinstance(data.get("results"), int)
+        or not isinstance(data.get("response"), list)
+    ):
+        raise FootballAPIError("Incomplete football API response.")
+
+    return data
+
+
+@app.errorhandler(FootballAPIError)
+def handle_football_api_error(error):
+    if request.endpoint == "compare_players":
+        return render_template(
+            "compare.html",
+            error=str(error)
+        ), 503
+
+    return render_template(
+        "index.html",
+        error=str(error)
+    ), 503
+
+
 def get_db_connection():
     conn = sqlite3.connect("players.db")
     conn.row_factory = sqlite3.Row
@@ -138,36 +234,20 @@ def midfield_score(assists, key_passes, passes_total, pass_accuracy, duels_won, 
 
 
 def search_player(player_name):
-    url = "https://v3.football.api-sports.io/players/profiles"
-
-    headers = {
-        "x-apisports-key": api_key
-    }
-
-    params = {
-        "search": player_name
-    }
-
-    response = requests.get(url, headers=headers, params=params)
-
-    return response.json()
+    return football_api_request(
+        "players/profiles",
+        {"search": player_name}
+    )
 
 
 def get_player_stats(player_id):
-    url = "https://v3.football.api-sports.io/players"
-
-    headers = {
-        "x-apisports-key": api_key
-    }
-
-    params = {
-        "id": player_id,
-        "season": SEASON
-    }
-
-    response = requests.get(url, headers=headers, params=params)
-
-    return response.json()
+    return football_api_request(
+        "players",
+        {
+            "id": player_id,
+            "season": SEASON
+        }
+    )
 
 
 def build_player_data(stats_data):
